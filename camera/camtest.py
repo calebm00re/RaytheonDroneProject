@@ -1,28 +1,29 @@
 import cv2
 import cv2.aruco as aruco
 import sys
+from picamera2 import Picamera2
 
 def main():
     # Set up the video capture
-    cap = cv2.VideoCapture(0)
-
+    cap = Picamera2()
+    cap.start()
     # Check if the webcam is opened correctly
-    if not cap.isOpened():
-        print("Error: Could not open video source.")
-        sys.exit()
+    #if not cap.isOpened():
+    #    print("Error: Could not open video source.")
+    #    sys.exit()
 
     # Load the predefined dictionary
-    dictionary = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
+    dictionary = aruco.getPredefinedDictionary(aruco.DICT_6X6_1000)
     parameters = aruco.DetectorParameters()
     detector = aruco.ArucoDetector(dictionary, parameters)
     try:
         while True:
             # Capture a frame
-            ret, frame = cap.read()
+            ret, frame = cap.capture_array()
             if not ret:
                 print("Error: Could not read frame.")
                 break
-
+            print("yep")
             # Detect ArUco markers
             corners, ids, rejectedImgPoints = detector.detectMarkers(frame)
 
