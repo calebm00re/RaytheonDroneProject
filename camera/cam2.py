@@ -19,7 +19,7 @@ def main():
         while True:
             # Capture a frame
             ret, frame = cap.read()
-            if ret:
+            if not ret:
                 print("Error: Could not read frame.")
                 break
 
