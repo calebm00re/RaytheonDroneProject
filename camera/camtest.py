@@ -2,6 +2,7 @@ import cv2
 import cv2.aruco as aruco
 import sys
 from picamera2 import Picamera2
+import numpy as np
 
 def main():
     # Set up the video capture
@@ -29,12 +30,20 @@ def main():
             #print("yep")
             # Detect ArUco markers
             corners, ids, rejectedImgPoints = detector.detectMarkers(image)
-
-            # If we've found markers, print their ID and position
             if ids is not None:
-                for corner, id in zip(corners, ids):
-                    x, y = corner[0][0]
-                    print(f"ID: {id[0]}, X: {x}, Y: {y}")
+                print(len(ids))
+            # If we've found markers, print their ID and position
+            if np.all(ids is not None):
+                for i, corner in zip(ids, corners):
+                    corner = corner[0]
+                    center_x = int(np.mean([c[0] for c in corner]))
+                    center_y = int(np.mean([c[1] for c in corner]))
+                    print(f"Marker ID: {i[0]}, Marker Center: ({center_x}, {center_y})")
+
+            #if ids is not None:
+            #    for corner, id in zip(corners, ids):
+            #        x, y = corner[0][0]
+            #        print(f"ID: {id[0]}, X: {x}, Y: {y}")
 
             # Add a small delay for easier CPU usage
             cv2.waitKey(10)
