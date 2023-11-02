@@ -6,6 +6,7 @@ from picamera2 import Picamera2
 def main():
     # Set up the video capture
     cap = Picamera2()
+    cap.resolution = (1920, 1080)
     cap.start()
     # Check if the webcam is opened correctly
     #if not cap.isOpened():
@@ -19,13 +20,15 @@ def main():
     try:
         while True:
             # Capture a frame
-            ret, frame = cap.capture_array()
-            if not ret:
-                print("Error: Could not read frame.")
-                break
-            print("yep")
+            origimage = cap.capture_array()
+            image = cv2.cvtColor(origimage, cv2.COLOR_BGR2GRAY)
+            #ret, frame = cap.capture_array()
+            #if not ret:
+            #    print("Error: Could not read frame.")
+            #    break
+            #print("yep")
             # Detect ArUco markers
-            corners, ids, rejectedImgPoints = detector.detectMarkers(frame)
+            corners, ids, rejectedImgPoints = detector.detectMarkers(image)
 
             # If we've found markers, print their ID and position
             if ids is not None:
@@ -40,7 +43,7 @@ def main():
         print("\nStopped by user.")
     finally:
         # Clean up
-        cap.release()
+        cap.stop()
 
 if __name__ == '__main__':
     main()
