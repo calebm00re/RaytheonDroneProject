@@ -7,7 +7,10 @@ import numpy as np
 def main():
     # Set up the video capture
     cap = Picamera2()
-    cap.resolution = (1920, 1080)
+    #cap.resolution = (1920, 1080
+    camera_config = cap.create_still_configuration()
+    #camera_config['main']['size'] = (1920,1080)
+    cap.configure(camera_config)
     cap.start()
     # Check if the webcam is opened correctly
     #if not cap.isOpened():
@@ -31,7 +34,7 @@ def main():
             # Detect ArUco markers
             corners, ids, rejectedImgPoints = detector.detectMarkers(image)
             if ids is not None:
-                print(len(ids))
+                print(len(ids) + " Markers Found")
             # If we've found markers, print their ID and position
             if np.all(ids is not None):
                 for i, corner in zip(ids, corners):
