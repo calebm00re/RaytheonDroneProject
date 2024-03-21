@@ -19,8 +19,7 @@ def main():
 
     # Load the predefined dictionary
     dictionary = aruco.getPredefinedDictionary(aruco.DICT_6X6_1000)
-    parameters = aruco.DetectorParameters()
-    detector = aruco.ArucoDetector(dictionary, parameters)
+    #parameters = aruco.DetectorParameters() this is empty
     try:
         while True:
             # Capture a frame
@@ -32,7 +31,7 @@ def main():
             #    break
             #print("yep")
             # Detect ArUco markers
-            corners, ids, rejectedImgPoints = detector.detectMarkers(image)
+            corners, ids, rejectedImgPoints = aruco.detectMarkers(image, dictionary)
             if ids is not None:
                 print(len(ids) + " Markers Found")
             # If we've found markers, print their ID and position
