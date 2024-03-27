@@ -24,6 +24,16 @@ try:
         dictionary = aruco.getPredefinedDictionary(aruco.DICT_6X6_1000)
         #parameters = aruco.DetectorParameters()
         corners, ids, rejectedImgPoints = aruco.detectMarkers(image, dictionary)
+        if ids is not None:
+            print(len(ids), " Markers Found")
+            # If we've found markers, print their ID and position
+            if np.all(ids is not None):
+                for i, corner in zip(ids, corners):
+                    corner = corner[0]
+                    center_x = int(np.mean([c[0] for c in corner]))
+                    center_y = int(np.mean([c[1] for c in corner]))
+                    print(f"Marker ID: {i[0]}, Marker Center: ({center_x}, {center_y})")
+        
     except:
         print("this line sucks")
     
