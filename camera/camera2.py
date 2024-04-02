@@ -13,17 +13,17 @@ try:
     camera.configure(camera_config)
     camera.start_preview(Preview.QTGL)
     camera.start()
-    #camera.start_preview(Prewview.QTGL)
 
     sleep(5)
-    image = camera.capture_array()
+    image = camera.capture_array("main")
+    im_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     print("took picture")
-    #cv2.imshow('Captured Image', image)
+    #cv2.imshow('Captured Image', im_gray)
     
     try:
         dictionary = aruco.getPredefinedDictionary(aruco.DICT_6X6_1000)
         #parameters = aruco.DetectorParameters()
-        corners, ids, rejectedImgPoints = aruco.detectMarkers(image, dictionary)
+        corners, ids, rejectedImgPoints = aruco.detectMarkers(im_gray, dictionary)
         if ids is not None:
             print(len(ids), " Markers Found")
             # If we've found markers, print their ID and position
