@@ -1,0 +1,46 @@
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  Serial.println("beginning");
+  pinMode(6, INPUT);
+  pinMode(5, INPUT);
+  pinMode(4, INPUT);
+  pinMode(7, INPUT);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  bool four = digitalRead(4);
+  bool five = digitalRead(5);
+  bool six = digitalRead(6);
+  bool seven = digitalRead(7);
+  //ch1
+  //off+6
+  if (!four && !five && six) {
+    Serial.println("SaLP");
+  }
+  //ch2
+  //4+6
+  else if (four && six) {
+    Serial.println("straight");
+  }
+  //ch3
+  //4+7
+  else if (four && seven) {
+    Serial.println("stair");
+  }
+  //ch4
+  //5+6
+  else if (five && six) {
+    Serial.println("lane change");
+  }
+  //ch5
+  //5+7
+  else if (five && seven) {
+    Serial.println("meaning of haste");
+  }
+  else {
+    Serial.println("no config");
+  }
+  delay(100);
+}
