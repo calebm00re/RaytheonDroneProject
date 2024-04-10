@@ -29,6 +29,13 @@ try:
             # If we've found markers, print their ID and position
             if np.all(ids is not None):
                 for i, corner in zip(ids, corners):
+                    if(i == 4):
+                        # friendly
+                        print('IT'S ME, DON'T SHOOT')
+                    else:
+                        # foe
+                        print('SHOOT THE ENEMY')
+                        # call the water thing
                     corner = corner[0]
                     center_x = int(np.mean([c[0] for c in corner]))
                     center_y = int(np.mean([c[1] for c in corner]))
