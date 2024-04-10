@@ -31,7 +31,7 @@ try:
                 for i, corner in zip(ids, corners):
                     if(i == 4):
                         # friendly
-                        print('IT'S ME, DON'T SHOOT')
+                        print('IT\'S ME, DON\'T SHOOT')
                     else:
                         # foe
                         print('SHOOT THE ENEMY')
