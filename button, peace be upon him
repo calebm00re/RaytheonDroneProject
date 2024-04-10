@@ -167,7 +167,6 @@ void balrog() {
   set_esc_power(esc_1, 0);
   set_esc_power(esc_2, 0);
   Serial.print("you shall not pass");
-  // while (gandalf) {/* you shall not pass */}
 }
 
 void turn_right(int time) {
