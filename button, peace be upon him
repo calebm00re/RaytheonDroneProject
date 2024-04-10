@@ -6,8 +6,9 @@ Servo esc_2;
 int power = 0;
 bool testing = true;
 bool valid = false;
-bool debug = false;
+bool debug = true;
 int total_forward = 0;
+bool detect_hit = false;
 
 
 void setup() {
@@ -46,35 +47,37 @@ void loop() {
   bool four = digitalRead(6);
   bool five = digitalRead(7);
   total_forward = 0;
+  detect_hit = false;
+
   if (!four && !five && six) {
-    // Serial.println("SaLP");
+    Serial.println("SaLP");
     valid = true;
   }
   else if (four && six) {
-    // Serial.println("straight");
+    Serial.println("straight");
     valid = true;
   }
   else if (four && seven) {
-    // Serial.println("stair");
+    Serial.println("stair");
     valid = true;
   }
   else if (five && six) {
-    // Serial.println("lane change");
+    Serial.println("lane change");
     valid = true;
   }
   else if (five && seven) {
-    // Serial.println("meaning of haste");
+    Serial.println("meaning of haste");
     valid = true;
   }
   else {
-    // Serial.println("no config");
+    Serial.println("no config");
     valid = false;
   }
 
   if (valid) {
     digitalWrite(8, HIGH);
     if(digitalRead(9) == HIGH) {
-      // Serial.println("pressed idiot");
+      Serial.println("pressed idiot");
       digitalWrite(8, LOW);
       if (!four && !five && six) {
         SaLP();
@@ -112,10 +115,8 @@ void hit() {
 bool check_stop() {
   int is_rain = digitalRead(rain_sensor_pin);
   if (is_rain != HIGH) {
-    //Serial.println("WET");
+    detect_hit = true;
     return true;
-  } else {
-    //Serial.println("DRY");
   }
   return false;
 }
@@ -145,8 +146,14 @@ void into_the_mines(int initial, int middle, int end, int speed, int turn_time) 
 
 void show_us_the_meaning_of_haste(int distance) {
   while (total_forward < distance) {
-    int rand_f = random(7000, 10001);
-    int rand_b = random(3000, 7001);
+    int rand_f = random(3500, 4001);
+    int rand_b = random(2000, 3501);
+    Serial.print("randf: ");
+    Serial.println(rand_f);
+    Serial.print("randb: ");
+    Serial.println(rand_b);
+    Serial.print("total distance: ");
+    Serial.println(total_forward);
     total_forward += rand_f;
     total_forward -= rand_b;
     go_forward(rand_f, 100);
@@ -239,9 +246,9 @@ void go_forward(int time, int top_speed) {
 
 void go_backward(int time, int top_speed) {
   // Serial.println("going forward");
-  accelerate(top_speed, 5);
+  accelerate_back(top_speed, 5);
   steady(5, time);
-  brake(top_speed, 5);
+  brake_back(top_speed, 5);
 }
 
 void steady(int inc, int duration) {
@@ -249,11 +256,13 @@ void steady(int inc, int duration) {
     delay(inc);
     if (check_stop()) {
       hit();
+      break;
     }   
   }
 }
 
 void set_esc_power(Servo esc, int power) {
+  if (detect_hit) power = 0;
   power = constrain(power, -100, 100);
   int signal_min = 1050;
   int signal_max = 1950;
