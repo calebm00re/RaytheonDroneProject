@@ -1,0 +1,333 @@
+#include <Servo.h>
+#include <EEPROM.h>
+const int rain_sensor_pin = 2;
+const int buzzer_pin = 3;
+Servo esc_1;
+Servo esc_2;
+int power = 0;
+bool show_log = true;
+int eeAddress = 0;
+bool testing = true;
+bool valid = false;
+//bool debug = true;
+int total_forward = 0;
+bool detect_hit = false;
+int mins = 8 * 6 * 8;
+int drop_left = 0;
+int drop_var = 20;  //16 for slowest speeds //20 for fast
+int skip_time = 0;  //850 for .17mph 300 for .26mph 0 for .47mph
+//300 is ~.7s a step on concrete at hotel need to recheck turf for new qual tests
+
+
+void setup() {
+  // put your setup code here, to run once:
+  if (true) {
+    Serial.begin(9600);
+    Serial.println("beginning");
+  }
+  // bool valid = false;
+
+  //switch modes
+  pinMode(6, INPUT);
+  pinMode(5, INPUT);
+  pinMode(4, INPUT);
+  pinMode(7, INPUT);
+
+  //led and button
+  pinMode(8, OUTPUT);
+  pinMode(9, INPUT);
+
+  //water sensor pins
+  pinMode(rain_sensor_pin, INPUT);
+  pinMode(buzzer_pin, OUTPUT);
+  esc_1.attach(10);
+  esc_2.attach(11);
+
+  //button pins
+  digitalWrite(8, LOW);
+  randomSeed(analogRead(A0));
+  delay(1000);
+}
+
+void loop() {
+  bool seven = digitalRead(5);
+  bool six = digitalRead(4);
+  bool four = digitalRead(6);
+  bool five = digitalRead(7);
+  total_forward = 0;
+  detect_hit = false;
+  drop_left = 1;
+
+  if (!four && !five && six) {
+    Serial.println("SaLP");
+    valid = true;
+  } else if (four && six) {
+    Serial.println("straight");
+    valid = true;
+  } else if (four && seven) {
+    Serial.println("stair");
+    valid = true;
+  } else if (five && six) {
+    Serial.println("lane change");
+    valid = true;
+  } else if (five && seven) {
+    Serial.println("meaning of haste");
+    valid = true;
+  } else if (four && !six && !seven) {
+    if (show_log) {
+      getMessage(0);
+      show_log = false;
+    }
+  } else {
+    Serial.println("no config");
+    show_log = true;
+    valid = false;
+  }
+
+  if (valid) {
+    digitalWrite(8, HIGH);
+    if (digitalRead(9) == HIGH) {
+      Serial.println("pressed idiot");
+      digitalWrite(8, LOW);
+      if (!four && !five && six) {
+        SaLP();
+      } else if (four && six) {
+        to_isengard(10000, 50);
+      } else if (four && seven) {
+        find_you_a_box(450, 7, 15, 50, 750);
+      } else if (five && six) {
+        into_the_mines(5000, 5000, 5000, 50, 750);
+      } else if (five && seven) {
+        show_us_the_meaning_of_haste(10000);
+      }
+      balrog();
+    }
+  } else {
+    digitalWrite(8, LOW);
+  }
+  delay(100);
+}
+
+void SaLP() {
+  while (!check_stop()) {}
+  hit();
+  return;
+}
+
+void hit() {
+  set_esc_power(esc_1, 0);
+  set_esc_power(esc_2, 0);
+  digitalWrite(buzzer_pin, HIGH);
+  logMessage(millis(), eeAddress);
+  while (digitalRead(9) != HIGH) { /*hang out till press*/
+  }
+  digitalWrite(buzzer_pin, LOW);
+  getMessage(eeAddress);
+}
+
+void logMessage(int timeHit, int eeAddress) {
+    // Create a character array to hold the message
+    char message[50]; // Make sure the size is sufficient to hold the entire message
+
+    // Format the message directly into the char array
+    snprintf(message, sizeof(message), "RTXDC_2024, SMU, UGV, Soaked!, AruCo 4, %d, NaN", timeHit);
+
+    // Write the message to EEPROM
+    int addrOffset = eeAddress;
+    byte len = strlen(message);
+    EEPROM.write(addrOffset, len);
+
+    for (int i = 0; i < len; i++) {
+        EEPROM.write(addrOffset + 1 + i, message[i]);
+    }
+}
+
+
+void getMessage(int eeAddress) {
+    int addrOffset = eeAddress;
+    byte len = EEPROM.read(addrOffset); // Read the length of the string stored in EEPROM
+    char message[len + 1]; // +1 for the null terminator
+
+    for (int i = 0; i < len; i++) {
+        message[i] = EEPROM.read(addrOffset + 1 + i);
+    }
+    message[len] = '\0'; // Null-terminate the string
+
+    Serial.println(message); // Print the message to the Serial monitor
+}
+
+
+bool check_stop() {
+  int is_rain = digitalRead(rain_sensor_pin);
+  int is_press = digitalRead(9);
+  if (is_rain != HIGH) {
+    detect_hit = true;
+    return true;
+  }
+  return false;
+}
+
+void to_isengard(int travel_time, int top_speed) {
+  tick_forward(travel_time, top_speed);
+  // go_forward(10000, 50);
+  return;
+}
+
+void find_you_a_box(int initial, int middle, int end, int speed, int turn_time) {
+  tick_forward(initial, speed);
+  drop_left = 1;
+  turn_right(turn_time);
+  tick_forward(middle, speed);
+  turn_left(turn_time);
+  drop_left = 1;
+  tick_forward(end, speed);
+  return;
+}
+
+void into_the_mines(int initial, int middle, int end, int speed, int turn_time) {
+  go_forward(initial, speed);
+  turn_right(turn_time);
+  go_forward(middle, speed);
+  turn_left(turn_time);
+  go_forward(end, speed);
+  return;
+}
+
+void show_us_the_meaning_of_haste(int distance) {
+  while (total_forward < distance) {
+    int rand_f = random(3500, 4001);
+    int rand_b = random(2000, 3501);
+    Serial.print("randf: ");
+    Serial.println(rand_f);
+    Serial.print("randb: ");
+    Serial.println(rand_b);
+    Serial.print("total distance: ");
+    Serial.println(total_forward);
+    total_forward += rand_f;
+    total_forward -= rand_b;
+    go_forward(rand_f, 100);
+    go_backward(rand_b, 100);
+  }
+}
+
+void balrog() {
+  bool gandalf = true;
+  set_esc_power(esc_1, 0);
+  set_esc_power(esc_2, 0);
+  Serial.print("you shall not pass");
+}
+
+void turn_right(int time) {
+  // Serial.print("turning right");
+  set_esc_power(esc_1, 50);
+  set_esc_power(esc_2, -25);
+  delay(time);
+  set_esc_power(esc_1, 0);
+  set_esc_power(esc_2, 0);
+}
+
+void turn_left(int time) {
+  // Serial.print("turning left");
+  set_esc_power(esc_1, -25);
+  set_esc_power(esc_2, 50);
+  delay(time);
+  set_esc_power(esc_1, 0);
+  set_esc_power(esc_2, 0);
+}
+
+void accelerate(int max, int inc) {
+  for (power = 0; power < max; power += inc) {
+    if (drop_left % drop_var != 0) {
+      set_esc_power(esc_1, power);
+    }
+    set_esc_power(esc_2, power);
+    delay(20);
+
+    if (check_stop()) {
+      hit();
+    }
+  }
+}
+
+void accelerate_back(int max, int inc) {
+  max = 0 - max;
+  for (power = 0; power > max; power -= inc) {
+    set_esc_power(esc_1, power);
+    set_esc_power(esc_2, power);
+    delay(20);
+
+    if (check_stop()) {
+      hit();
+    }
+  }
+}
+
+void brake(int starting, int inc) {
+  for (power = starting; power > 0; power -= inc) {
+    if (drop_left % drop_var != 0) {
+      set_esc_power(esc_1, power);
+    }
+    set_esc_power(esc_2, power);
+    delay(20);
+
+    if (check_stop()) {
+      hit();
+    }
+  }
+}
+
+void brake_back(int starting, int inc) {
+  for (power = 0 - starting; power < 0; power += inc) {
+    set_esc_power(esc_1, power);
+    set_esc_power(esc_2, power);
+    delay(20);
+
+    if (check_stop()) {
+      hit();
+    }
+  }
+}
+
+void go_forward(int time, int top_speed) {
+  Serial.println("going forward");
+  accelerate(top_speed, 5);
+  steady(5, time);
+  brake(top_speed, 5);
+}
+
+void tick_forward(int time, int top_speed) {
+  Serial.println("going forward");
+  for (int i = 0; i < time; i += 1) {
+    accelerate(top_speed, 5);
+    brake(top_speed, 5);
+    //850 for .17mph
+    drop_left += 1;
+    delay(skip_time);
+  }
+}
+
+void go_backward(int time, int top_speed) {
+  // Serial.println("going forward");
+  accelerate_back(top_speed, 5);
+  steady(5, time);
+  brake_back(top_speed, 5);
+}
+
+void steady(int inc, int duration) {
+  for (int i = 0; i < duration; i += inc) {
+    delay(inc);
+    if (check_stop()) {
+      hit();
+      break;
+    }
+  }
+}
+
+void set_esc_power(Servo esc, int power) {
+  if (detect_hit) power = 0;
+  power = constrain(power, -100, 100);
+  int signal_min = 1050;
+  int signal_max = 1950;
+  int signal_output = map(power, -100, 100, signal_min, signal_max);  //map(value, fromLow, fromHigh, toLow, toHigh)
+  esc.writeMicroseconds(signal_output);
+}
